@@ -12,15 +12,20 @@ namespace bustub {
  * set your own input parameters
  */
 INDEX_TEMPLATE_ARGUMENTS
-INDEXITERATOR_TYPE::IndexIterator() : buffer_pool_(nullptr), page_(nullptr), index_at_page_(-1), page_id_(INVALID_PAGE_ID) {}
+INDEXITERATOR_TYPE::IndexIterator() : buffer_pool_(nullptr), page_(nullptr), index_at_page_(-1), page_id_(INVALID_PAGE_ID) {
+}
 
 INDEX_TEMPLATE_ARGUMENTS
 INDEXITERATOR_TYPE::IndexIterator(Page *p, BufferPoolManager *bpm, int idx)
-    : buffer_pool_(bpm), page_(p), index_at_page_(idx), page_id_(p->GetPageId()) {}
+    : buffer_pool_(bpm), page_(p), index_at_page_(idx), page_id_(p->GetPageId()) {
+  LOG_DEBUG("Latch node {%d} read", page_->GetPageId());
+}
 
 INDEX_TEMPLATE_ARGUMENTS
 INDEXITERATOR_TYPE::~IndexIterator() {
   if (page_) {
+    LOG_DEBUG("UnLatch node {%d} read", page_->GetPageId());
+    page_->RUnlatch();
     buffer_pool_->UnpinPage(page_->GetPageId(), false);
   }
 }
@@ -48,6 +53,8 @@ INDEXITERATOR_TYPE &INDEXITERATOR_TYPE::operator++() {
         reinterpret_cast<B_PLUS_TREE_LEAF_PAGE_TYPE *>(page_)->GetNextPageId());
 
   if (index_at_page_ >= reinterpret_cast<B_PLUS_TREE_LEAF_PAGE_TYPE *>(page_)->GetSize()  - 1) {
+    page_->RUnlatch();
+    LOG_DEBUG("UnLatch node {%d} read", page_->GetPageId());
     if (reinterpret_cast<B_PLUS_TREE_LEAF_PAGE_TYPE *>(page_)->GetNextPageId() == INVALID_PAGE_ID) {
       page_id_t old_page_id = page_id_;
       page_ = nullptr;
@@ -56,7 +63,7 @@ INDEXITERATOR_TYPE &INDEXITERATOR_TYPE::operator++() {
       buffer_pool_->UnpinPage(old_page_id, false);
     } else {
       auto next_page_id = reinterpret_cast<B_PLUS_TREE_LEAF_PAGE_TYPE *>(page_)->GetNextPageId();
-      // If is copy?
+
       buffer_pool_->UnpinPage(page_->GetPageId(), false);
       auto page = buffer_pool_->FetchPage(next_page_id);
       if (page == nullptr) {
@@ -65,6 +72,9 @@ INDEXITERATOR_TYPE &INDEXITERATOR_TYPE::operator++() {
       page_ = page;
       page_id_ = page_->GetPageId();
       index_at_page_ = 0;
+
+      page_->RLatch();
+      LOG_DEBUG("Latch node {%d} read", page_->GetPageId());
     }
   } else {
     index_at_page_++;

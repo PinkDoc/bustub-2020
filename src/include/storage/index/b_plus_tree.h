@@ -23,6 +23,8 @@ namespace bustub {
 
 #define BPLUSTREE_TYPE BPlusTree<KeyType, ValueType, KeyComparator>
 
+
+
 /**
  * Main class providing the API for the Interactive B+ Tree.
  *
@@ -33,10 +35,16 @@ namespace bustub {
  * (3) The structure should shrink and grow dynamically
  * (4) Implement index iterator for range scan
  */
+
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTree {
   using InternalPage = BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator>;
   using LeafPage = BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>;
+
+  static constexpr int OperatorInsert = 0;
+  static constexpr int OperatorDelete = 1;
+  static constexpr int OperatorUpdate = 2;
+  static constexpr int OperatorFind = 3;
 
   inline BPlusTreePage* TreePage(Page* p) {
     return reinterpret_cast<BPlusTreePage*>(p->GetData());
@@ -99,11 +107,10 @@ class BPlusTree {
   // read data from file and remove one by one
   void RemoveFromFile(const std::string &file_name, Transaction *transaction = nullptr);
   // expose for test purpose
-  Page *FindLeafPage(const KeyType &key, bool leftMost = false);
+  Page *FindLeafPage(const KeyType &key, bool leftMost = false, Transaction* t = nullptr, int op = OperatorFind);
 
 
  private:
-
   inline void AddInToDeletePages(Transaction*t, page_id_t p)
   {
     t->AddIntoDeletedPageSet(p );
@@ -115,6 +122,83 @@ class BPlusTree {
     for (auto &i : *set_ptr)
     {
       buffer_pool_manager_->DeletePage(i);
+    }
+  }
+
+  inline void ReleaseAllLatch(Transaction* t, int op, bool dirty)
+  {
+      for (auto i : *t->GetPageSet()) {
+
+              if (i == nullptr) {
+                switch (op) {
+                  case OperatorFind:
+                  case OperatorUpdate:
+                    root_latch_.RUnlock();
+                    break;
+                  case OperatorInsert:
+                  case OperatorDelete:
+                    root_latch_.WUnlock();
+                    break;
+                }
+              } else {
+                UnlatchPage(i, op);
+              }
+
+
+          if (i != nullptr) {
+              buffer_pool_manager_->UnpinPage(i->GetPageId(), dirty);
+          } else {
+            LOG_DEBUG("Release root latch");
+          }
+      }
+      t->GetPageSet()->clear();
+  }
+
+  inline bool IsSafeOperation(BPlusTreePage* node, int op)
+  {
+      switch (op) {
+          case OperatorFind:
+              return true;
+          case OperatorUpdate:
+              return true;
+          case OperatorDelete:
+              if (node->IsRootPage()) {
+                if (!node->IsLeafPage()) return node->GetSize() > 2;
+                else return node->GetSize() > 1;
+              } else {
+                return node->GetSize() > node->GetMinSize() + 1;
+              }
+          case OperatorInsert:
+              return node->GetSize() < node->GetMaxSize() - 1;
+      }
+      return false;
+  }
+
+  inline void LatchPage(Page* p, int op)
+  {
+    switch (op) {
+      case OperatorFind:
+      case OperatorUpdate:
+        p->RLatch();
+        break;
+      case OperatorDelete:
+      case OperatorInsert:
+        p->WLatch();
+        break;
+    }
+  }
+
+  inline void UnlatchPage(Page* p , int op)
+  {
+    switch (op) {
+      case OperatorFind:
+      case OperatorUpdate:
+        p->RUnlatch();
+        break;
+      case OperatorDelete:
+      case OperatorInsert:
+        p->WUnlatch();
+        break;
     }
   }
 
@@ -139,7 +223,7 @@ class BPlusTree {
   template <typename N>
   void Redistribute(N *neighbor_node, N *node, int index, bool on_left);
 
-  bool AdjustRoot(BPlusTreePage *node);
+  bool AdjustRoot(BPlusTreePage *node, Transaction* t);
 
   void UpdateRootPageId(int insert_record = 0);
 
@@ -155,6 +239,8 @@ class BPlusTree {
   KeyComparator comparator_;
   int leaf_max_size_;
   int internal_max_size_;
+
+  ReaderWriterLatch root_latch_;
 };
 
 }  // namespace bustub

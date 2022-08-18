@@ -35,16 +35,20 @@ TEST(BPlusTreeTests, InsertTest1) {
     (void)header_page;
 
     std::vector<int64_t> keys = {1, 2, 3, 4, 5};
+
+    for (auto i = 0; i < 50; ++i)
+    {
+      keys.push_back( 6 + i);
+    }
+
     for (auto key : keys) {
       int64_t value = key & 0xFFFFFFFF;
       rid.Set(static_cast<int32_t>(key >> 32), value);
       index_key.SetFromInteger(key);
       tree.Insert(index_key, rid, transaction);
     }
-
     std::vector<RID> rids;
     std::string s;
-    tree.Print(bpm);
     for (auto key : keys) {
       rids.clear();
       index_key.SetFromInteger(key);
@@ -77,7 +81,7 @@ TEST(BPlusTreeTests, InsertTest1) {
 
 }
 
-TEST(BPlusTreeTests, InsertTest2) {
+TEST(BPlusTreeTests, DISABLED_InsertTest2) {
     // create KeyComparator and index schema
     Schema *key_schema = ParseCreateStatement("a bigint");
     GenericComparator<8> comparator(key_schema);

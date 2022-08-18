@@ -1,0 +1,29 @@
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/pink/Public/bustub
+-- BusTub/main found clang-format at /usr/bin/clang-format
+-- BusTub/main found clang-tidy at /usr/bin/clang-tidy
+-- BusTub/main found cpplint at /home/pink/Public/bustub/build_support/cpplint.py
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/pink/Public/bustub/cmake-build-debug/googletest-download
+[ 11%] Performing download step (git clone) for 'googletest'
+Cloning into 'googletest-src'...
+Already on 'main'
+Your branch is up to date with 'origin/main'.
+[ 22%] No patch step for 'googletest'
+[ 33%] Performing update step for 'googletest'
+fatal: unable to access 'https://github.com/google/googletest.git/': GnuTLS recv error (-54): Error in the pull function.
+CMake Error at /home/pink/Public/bustub/cmake-build-debug/googletest-download/googletest-prefix/tmp/googletest-gitupdate.cmake:55 (message):
+  Failed to fetch repository 'https://github.com/google/googletest.git'
+
+
+make[2]: *** [CMakeFiles/googletest.dir/build.make:97: googletest-prefix/src/googletest-stamp/googletest-update] Error 1
+make[1]: *** [CMakeFiles/Makefile2:76: CMakeFiles/googletest.dir/all] Error 2
+make: *** [Makefile:84: all] Error 2
+-- CMAKE_CXX_FLAGS:  -fPIC -Wall -Wextra -Werror -Wno-unused-parameter -Wno-attributes
+-- CMAKE_CXX_FLAGS_DEBUG: -g -O0 -ggdb -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls
+-- CMAKE_EXE_LINKER_FLAGS:  -fPIC
+-- CMAKE_SHARED_LINKER_FLAGS:  -fPIC
+-- BusTub/test found valgrind at /usr/bin/valgrind
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/pink/Public/bustub/cmake-build-debug

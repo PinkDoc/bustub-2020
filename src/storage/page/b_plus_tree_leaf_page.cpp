@@ -85,18 +85,11 @@ const MappingType &B_PLUS_TREE_LEAF_PAGE_TYPE::GetItem(int index) {
  * */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::Remove(int index) {
-    assert(index < GetSize());
-
-    if (index == GetSize() - 1) {
-      IncreaseSize(-1);
-      return;
-    }
-
-    for (auto i = index; i < GetSize(); ++i)
-    {
-      array[index] = array[index + 1];
-    }
-    IncreaseSize(-1);
+  int size = GetSize();
+  for (int i = index; i < size - 1; ++i){
+    array[i] = array[i + 1];
+  }
+  IncreaseSize(-1);
 }
 
 

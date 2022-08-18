@@ -198,9 +198,9 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyNFrom(MappingType *items, int size, Buf
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::Remove(int index) {
-  for (auto i = index; i < GetSize() - 1; ++i)
+  for (auto i = index; i < GetSize() - 1 ; ++i)
   {
-    array[index] = array[index + 1];
+    array[i] = array[i + 1];
   }
   IncreaseSize(-1);
 }
@@ -295,6 +295,8 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyFirstFrom(const MappingType &pair, Buff
     array[i] = array[i-1];
   }
   array[0] = pair;
+  IncreaseSize(1);
+
   auto page_id = pair.second;
   auto page = buffer_pool_manager->FetchPage(page_id);
 

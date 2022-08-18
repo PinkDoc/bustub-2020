@@ -170,7 +170,7 @@ class BufferPoolManager {
   /** Page table for keeping track of buffer pool pages. */
   std::unordered_map<page_id_t, frame_id_t> page_table_;
   /** Replacer to find unpinned pages for replacement. */
-  Replacer *replacer_;
+  LRUReplacer *replacer_;
   /** List of free pages. */
   std::list<frame_id_t> free_list_;
   /** This latch protects shared data structures. We recommend updating this comment to describe what it protects. */

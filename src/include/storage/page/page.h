@@ -36,6 +36,10 @@ class Page {
   /** Default destructor. */
   ~Page() = default;
 
+  inline void SetDirty() {
+      is_dirty_ = true;
+  }
+
   /** @return the actual data contained within this page */
   inline char *GetData() { return data_; }
 
@@ -95,6 +99,7 @@ class Page {
   bool is_dirty_ = false;
   /** Page latch. */
   ReaderWriterLatch rwlatch_;
+
 };
 
 }  // namespace bustub

@@ -34,6 +34,14 @@ class ReaderWriterLatch {
 
   DISALLOW_COPY(ReaderWriterLatch);
 
+  bool isRLocked() const{
+    return reader_count_ > 0;
+  }
+
+  bool isWLocked() const {
+    return writer_entered_ == true && reader_count_ == 0;
+  }
+
   /**
    * Acquire a write latch.
    */

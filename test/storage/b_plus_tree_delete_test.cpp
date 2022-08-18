@@ -54,6 +54,7 @@ TEST(BPlusTreeTests, DeleteTest1) {
   int64_t start_key = 1;
   int64_t current_key = start_key;
   index_key.SetFromInteger(start_key);
+
     for (auto iterator = tree.Begin(index_key); iterator != tree.end(); ++iterator) {
       auto location = (*iterator).second;
       
@@ -64,7 +65,7 @@ TEST(BPlusTreeTests, DeleteTest1) {
 
 
 
-  EXPECT_EQ(current_key, keys.size() + 1);
+   EXPECT_EQ(current_key, keys.size() + 1);
 
   std::vector<int64_t> remove_keys = {1, 5};
   for (auto key : remove_keys) {
@@ -181,6 +182,7 @@ TEST(BPlusTreeTests, DeleteTest2) {
   remove("test.db");
   remove("test.log");
 }
+
 
 
 }  // namespace bustub
