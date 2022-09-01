@@ -32,7 +32,6 @@ Tuple NestedLoopJoinExecutor::Join(Tuple* l, Tuple* r) {
   {
     res.emplace_back(i.GetExpr()->EvaluateJoin(l, left_executor_->GetOutputSchema(), r, right_executor_->GetOutputSchema()));
   }
-
   return Tuple{res, GetOutputSchema()};
 }
 
