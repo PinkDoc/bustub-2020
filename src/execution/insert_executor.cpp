@@ -24,7 +24,13 @@ void InsertExecutor::Init() {
   table_meta_ = catalog_->GetTable(plan_->TableOid());
   table_ = table_meta_->table_.get();
 
-  child_exec_->Init();
+  if (!plan_->IsRawInsert()) {
+    child_exec_->Init();
+  }
+
+  if (plan_->IsRawInsert()) {
+    iter_ = plan_->RawValues().begin();
+  }
 }
 
 bool InsertExecutor::Insert(Tuple* t, RID* r) {
@@ -41,9 +47,18 @@ bool InsertExecutor::Insert(Tuple* t, RID* r) {
 
 bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
 
-  if (auto ok = child_exec_->Next(tuple, rid); ok) {
-    return Insert(tuple , rid);
+  if (!plan_->IsRawInsert()) {
+    if (auto ok = child_exec_->Next(tuple, rid); ok) {
+      return Insert(tuple, rid);
+    }
+    return false;
   }
+
+  if (iter_ != plan_->RawValues().end()) {
+    auto t = Tuple{*iter_++ , &table_meta_->schema_};
+    return Insert(&t , rid);
+  }
+
   return false;
 
 }

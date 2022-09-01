@@ -53,5 +53,6 @@ class InsertExecutor : public AbstractExecutor {
   TableMetadata* table_meta_;
   TableHeap* table_;
   Catalog* catalog_;
+  std::vector<std::vector<Value>>::const_iterator iter_;
 };
 }  // namespace bustub
