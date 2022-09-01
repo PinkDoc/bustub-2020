@@ -39,8 +39,11 @@ class SeqScanExecutor : public AbstractExecutor {
 
   const Schema *GetOutputSchema() override { return plan_->OutputSchema(); }
 
+  void GetValues(Tuple* t);
  private:
   /** The sequential scan plan node to be executed. */
   const SeqScanPlanNode *plan_;
+  TableIterator iter_;
+  TableHeap* table_heap_;
 };
 }  // namespace bustub

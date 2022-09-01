@@ -75,6 +75,8 @@ class UpdateExecutor : public AbstractExecutor {
     return Tuple(values, &schema);
   }
 
+  bool Update(Tuple* t, RID* r);
+
  private:
   /** The update plan node to be executed. */
   const UpdatePlanNode *plan_;

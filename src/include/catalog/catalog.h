@@ -77,14 +77,38 @@ class Catalog {
    */
   TableMetadata *CreateTable(Transaction *txn, const std::string &table_name, const Schema &schema) {
     BUSTUB_ASSERT(names_.count(table_name) == 0, "Table names should be unique!");
-    return nullptr;
+
+    table_oid_t table_oid = next_table_oid_++;
+    std::unique_ptr<TableHeap> table(new TableHeap(bpm_, lock_manager_, log_manager_, txn));
+    std::unique_ptr<TableMetadata> table_meta_data_ptr(new TableMetadata(schema, table_name,
+                                                                         std::move(table), table_oid));
+    TableMetadata* table_meta = table_meta_data_ptr.get();
+
+    tables_.insert({table_oid, std::move(table_meta_data_ptr)});
+    names_.insert({table_name, table_oid});
+    index_names_.emplace(table_name, std::unordered_map<std::string, index_oid_t>());
+
+    return table_meta;
   }
 
   /** @return table metadata by name */
-  TableMetadata *GetTable(const std::string &table_name) { return nullptr; }
+  TableMetadata *GetTable(const std::string &table_name) {
+    auto search = names_.find(table_name);
+    if (search == names_.end()){
+      throw std::out_of_range("In GetTable");
+    }
+    table_oid_t table_oid = search->second;
+    return tables_.find(table_oid)->second.get();
+  }
 
   /** @return table metadata by oid */
-  TableMetadata *GetTable(table_oid_t table_oid) { return nullptr; }
+  TableMetadata *GetTable(table_oid_t table_oid) {
+    auto search = tables_.find(table_oid);
+    if (search == tables_.end()){
+      throw std::out_of_range("In GetTable");
+    }
+    return search->second.get();
+  }
 
   /**
    * Create a new index, populate existing data of the table and return its metadata.
@@ -97,18 +121,67 @@ class Catalog {
    * @param keysize size of the key
    * @return a pointer to the metadata of the new table
    */
+
   template <class KeyType, class ValueType, class KeyComparator>
   IndexInfo *CreateIndex(Transaction *txn, const std::string &index_name, const std::string &table_name,
                          const Schema &schema, const Schema &key_schema, const std::vector<uint32_t> &key_attrs,
                          size_t keysize) {
-    return nullptr;
+
+    index_oid_t index_oid = next_index_oid_++;
+
+    IndexMetadata * index_meta_data = new IndexMetadata{index_name, table_name, &schema, key_attrs};
+    std::unique_ptr<Index> index_ptr(new BPLUSTREE_INDEX_TYPE{index_meta_data, bpm_});
+    std::unique_ptr<IndexInfo> index_info_ptr(new IndexInfo{key_schema, index_name, std::move(index_ptr), index_oid, table_name, keysize});
+    IndexInfo * index = index_info_ptr.get();
+
+    indexes_.insert({index_oid, std::move(index_info_ptr)});
+    auto iter = index_names_.find(table_name);
+    assert(iter != index_names_.end());
+    iter->second.insert({index_name, index_oid});
+
+    return index;
   }
 
-  IndexInfo *GetIndex(const std::string &index_name, const std::string &table_name) { return nullptr; }
+  IndexInfo *GetIndex(const std::string &index_name, const std::string &table_name) {
+    auto search_table = index_names_.find(table_name);
+    if (search_table == index_names_.end()){
+      throw bustub::Exception{ExceptionType::OUT_OF_RANGE, "GetIndex"};
+    }
 
-  IndexInfo *GetIndex(index_oid_t index_oid) { return nullptr; }
+    auto &index_table = search_table->second;
+    auto search_index_oid = index_table.find(index_name);
+    if (search_index_oid == index_table.end()){
+      throw bustub::Exception{ExceptionType::OUT_OF_RANGE, "GetIndex"};
+    }
 
-  std::vector<IndexInfo *> GetTableIndexes(const std::string &table_name) { return std::vector<IndexInfo *>(); }
+    index_oid_t index_oid = search_index_oid->second;
+    return indexes_.find(index_oid)->second.get();
+  }
+
+  IndexInfo *GetIndex(index_oid_t index_oid) {
+    auto search = indexes_.find(index_oid);
+    if (search == indexes_.end()){
+      throw bustub::Exception{ExceptionType::OUT_OF_RANGE, "GetIndex"};
+    }
+    return search->second.get();
+  }
+
+  std::vector<IndexInfo *> GetTableIndexes(const std::string &table_name) {
+    std::vector<IndexInfo *> res{};
+    auto search_table = index_names_.find(table_name);
+    if (search_table == index_names_.end()){
+      throw bustub::Exception{ExceptionType::OUT_OF_RANGE, "GetTableIndexs"};
+    }
+
+    auto index_set = search_table->second;
+    for (const auto &pair: index_set){
+      index_oid_t index_oid = pair.second;
+      IndexInfo *index_info_ptr = indexes_.find(index_oid)->second.get();
+      res.push_back(index_info_ptr);
+    }
+
+    return res;
+  }
 
  private:
   [[maybe_unused]] BufferPoolManager *bpm_;

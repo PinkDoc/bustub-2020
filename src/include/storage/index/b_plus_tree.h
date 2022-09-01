@@ -169,6 +169,7 @@ class BPlusTree {
                 return node->GetSize() > node->GetMinSize() + 1;
               }
           case OperatorInsert:
+              // 如果是node的size 是 MaxSize() -1， 再插入则会分裂
               return node->GetSize() < node->GetMaxSize() - 1;
       }
       return false;

@@ -46,10 +46,13 @@ class DeleteExecutor : public AbstractExecutor {
   // Delete from indexes if necessary.
   bool Next([[maybe_unused]] Tuple *tuple, RID *rid) override;
 
+  bool Delete(Tuple* t, RID* r);
+
  private:
   /** The delete plan node to be executed. */
   const DeletePlanNode *plan_;
   /** The child executor to obtain rid from. */
   std::unique_ptr<AbstractExecutor> child_executor_;
+  TableMetadata* table_meta_;
 };
 }  // namespace bustub

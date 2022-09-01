@@ -163,7 +163,7 @@ bool BPLUSTREE_TYPE::InsertIntoLeaf(const KeyType &key, const ValueType &value, 
   }
 
   int size = leaf_node->Insert(key, value, comparator_);
-  if (size > leaf_node->GetMaxSize()) {
+  if (size >= leaf_node->GetMaxSize()) {
     LeafPage *new_leaf_node = Split(leaf_node);
 
     if (new_leaf_node == nullptr) {
@@ -201,6 +201,7 @@ N *BPLUSTREE_TYPE::Split(N *node) {
   if (page == nullptr) {
     throw Exception(ExceptionType::OUT_OF_MEMORY, "OutOfMemory Split NewPage");
   }
+
   auto basic_node = reinterpret_cast<BPlusTreePage *>(node);
   if (basic_node->IsLeafPage()) {
     auto new_leaf_node = reinterpret_cast<N *>(page->GetData());
@@ -270,7 +271,7 @@ void BPLUSTREE_TYPE::InsertIntoParent(BPlusTreePage *old_node, const KeyType &ke
 
   int size = parent_internal_node->InsertNodeAfter(old_node->GetPageId(), key, new_node->GetPageId());
 
-  if (size == parent_internal_node->GetMaxSize()) {
+  if (size >= parent_internal_node->GetMaxSize()) {
     InternalPage *new_parent_internal_node = Split(parent_internal_node);
     parent_internal_node->MoveHalfTo(new_parent_internal_node, buffer_pool_manager_);
     InsertIntoParent(parent_internal_node, new_parent_internal_node->KeyAt(0), new_parent_internal_node, transaction);

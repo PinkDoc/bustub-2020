@@ -24,7 +24,7 @@
 
 namespace bustub {
 // NOLINTNEXTLINE
-TEST(TupleTest, DISABLED_TableHeapTest) {
+TEST(TupleTest, TableHeapTest) {
   // test1: parse create sql statement
   std::string create_stmt = "a varchar(20), b smallint, c bigint, d bool, e varchar(16)";
   Column col1{"a", TypeId::VARCHAR, 20};

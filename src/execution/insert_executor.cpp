@@ -17,10 +17,35 @@ namespace bustub {
 
 InsertExecutor::InsertExecutor(ExecutorContext *exec_ctx, const InsertPlanNode *plan,
                                std::unique_ptr<AbstractExecutor> &&child_executor)
-    : AbstractExecutor(exec_ctx) {}
+    : AbstractExecutor(exec_ctx), plan_(plan), child_exec_(std::move(child_executor)), table_meta_(nullptr), table_(nullptr), catalog_(nullptr) {}
 
-void InsertExecutor::Init() {}
+void InsertExecutor::Init() {
+  catalog_ = exec_ctx_->GetCatalog();
+  table_meta_ = catalog_->GetTable(plan_->TableOid());
+  table_ = table_meta_->table_.get();
 
-bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) { return false; }
+  child_exec_->Init();
+}
+
+bool InsertExecutor::Insert(Tuple* t, RID* r) {
+  auto res = table_->InsertTuple(*t, r, exec_ctx_->GetTransaction());
+
+  if (!res) return false;
+
+  for (auto& i : catalog_->GetTableIndexes(table_meta_->name_)) {
+    i->index_->InsertEntry(t->KeyFromTuple(table_meta_->schema_, i->key_schema_, i->index_->GetKeyAttrs()), *r , exec_ctx_->GetTransaction());
+  }
+
+  return true;
+}
+
+bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
+
+  if (auto ok = child_exec_->Next(tuple, rid); ok) {
+    return Insert(tuple , rid);
+  }
+  return false;
+
+}
 
 }  // namespace bustub
