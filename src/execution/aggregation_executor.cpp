@@ -18,12 +18,47 @@ namespace bustub {
 
 AggregationExecutor::AggregationExecutor(ExecutorContext *exec_ctx, const AggregationPlanNode *plan,
                                          std::unique_ptr<AbstractExecutor> &&child)
-    : AbstractExecutor(exec_ctx) {}
+    : AbstractExecutor(exec_ctx),
+      plan_(plan),
+      child_(std::move(child)),
+      aht_(plan->GetAggregates(), plan->GetAggregateTypes()),
+      aht_iterator_(aht_.Begin())
+{}
 
 const AbstractExecutor *AggregationExecutor::GetChildExecutor() const { return child_.get(); }
 
-void AggregationExecutor::Init() {}
+void AggregationExecutor::Init() {
+  child_->Init();
 
-bool AggregationExecutor::Next(Tuple *tuple, RID *rid) { return false; }
+  Tuple t;
+  RID r;
+  while (child_->Next(&t, &r))
+  {
+    aht_.InsertCombine(MakeKey(&t), MakeVal(&t));
+  }
+
+  aht_iterator_ = aht_.Begin();
+}
+
+bool AggregationExecutor::Next(Tuple *tuple, RID *rid) {
+  while (aht_iterator_ != aht_.End()){
+    if (plan_->GetHaving() == nullptr || plan_->GetHaving()->EvaluateAggregate(aht_iterator_.Key().group_bys_, aht_iterator_.Val().aggregates_).GetAs<bool>()) {
+
+      std::vector<Value> values;
+
+      for (auto& i : GetOutputSchema()->GetColumns())
+      {
+        values.emplace_back(i.GetExpr()->EvaluateAggregate(aht_iterator_.Key().group_bys_, aht_iterator_.Val().aggregates_));
+      }
+      *tuple = Tuple{values, GetOutputSchema()};
+      ++aht_iterator_;
+      return true;
+    }
+
+    ++aht_iterator_;
+  }
+
+  return false;
+}
 
 }  // namespace bustub

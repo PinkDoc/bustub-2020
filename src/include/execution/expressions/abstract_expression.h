@@ -18,6 +18,10 @@
 #include "catalog/schema.h"
 #include "storage/table/tuple.h"
 
+/**
+ * Expression 负责评估和生成Value
+ * */
+
 namespace bustub {
 /**
  * AbstractExpression is the base class of all the expressions in the system.
