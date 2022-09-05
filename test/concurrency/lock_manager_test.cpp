@@ -77,7 +77,7 @@ void BasicTest1() {
     delete txns[i];
   }
 }
-TEST(LockManagerTest, DISABLED_BasicTest) { BasicTest1(); }
+TEST(LockManagerTest, BasicTest) { BasicTest1(); }
 
 void TwoPLTest() {
   LockManager lock_mgr{};
@@ -123,7 +123,7 @@ void TwoPLTest() {
 
   delete txn;
 }
-TEST(LockManagerTest, DISABLED_TwoPLTest) { TwoPLTest(); }
+TEST(LockManagerTest,  TwoPLTest) { TwoPLTest(); }
 
 void UpgradeTest() {
   LockManager lock_mgr{};
@@ -150,9 +150,9 @@ void UpgradeTest() {
   txn_mgr.Commit(&txn);
   CheckCommitted(&txn);
 }
-TEST(LockManagerTest, DISABLED_UpgradeLockTest) { UpgradeTest(); }
+TEST(LockManagerTest,  UpgradeLockTest) { UpgradeTest(); }
 
-TEST(LockManagerTest, DISABLED_GraphEdgeTest) {
+TEST(LockManagerTest,  GraphEdgeTest) {
   LockManager lock_mgr{};
   TransactionManager txn_mgr{&lock_mgr};
   const int num_nodes = 100;
@@ -182,6 +182,8 @@ TEST(LockManagerTest, DISABLED_GraphEdgeTest) {
     EXPECT_EQ((i / 2) + 1, lock_mgr.GetEdgeList().size());
   }
 
+
+
   auto lock_mgr_edges = lock_mgr.GetEdgeList();
   EXPECT_EQ(num_edges, lock_mgr_edges.size());
   EXPECT_EQ(num_edges, edges.size());
@@ -194,7 +196,7 @@ TEST(LockManagerTest, DISABLED_GraphEdgeTest) {
   }
 }
 
-TEST(LockManagerTest, DISABLED_BasicCycleTest) {
+TEST(LockManagerTest,  BasicCycleTest) {
   LockManager lock_mgr{}; /* Use Deadlock detection */
   TransactionManager txn_mgr{&lock_mgr};
 
@@ -203,15 +205,18 @@ TEST(LockManagerTest, DISABLED_BasicCycleTest) {
   lock_mgr.AddEdge(1, 0);
   EXPECT_EQ(2, lock_mgr.GetEdgeList().size());
 
+
+
   txn_id_t txn;
   EXPECT_EQ(true, lock_mgr.HasCycle(&txn));
   EXPECT_EQ(1, txn);
 
   lock_mgr.RemoveEdge(1, 0);
+
   EXPECT_EQ(false, lock_mgr.HasCycle(&txn));
 }
 
-TEST(LockManagerTest, DISABLED_BasicDeadlockDetectionTest) {
+TEST(LockManagerTest,  BasicDeadlockDetectionTest) {
   LockManager lock_mgr{};
   cycle_detection_interval = std::chrono::milliseconds(500);
   TransactionManager txn_mgr{&lock_mgr};
@@ -228,12 +233,12 @@ TEST(LockManagerTest, DISABLED_BasicDeadlockDetectionTest) {
     EXPECT_EQ(true, res);
     EXPECT_EQ(TransactionState::GROWING, txn0->GetState());
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     // This will block
     lock_mgr.LockExclusive(txn0, rid1);
 
     lock_mgr.Unlock(txn0, rid0);
     lock_mgr.Unlock(txn0, rid1);
+
 
     txn_mgr.Commit(txn0);
     EXPECT_EQ(TransactionState::COMMITTED, txn0->GetState());
@@ -252,7 +257,7 @@ TEST(LockManagerTest, DISABLED_BasicDeadlockDetectionTest) {
       EXPECT_EQ(TransactionState::ABORTED, txn1->GetState());
       txn_mgr.Abort(txn1);
     } catch (TransactionAbortException &e) {
-      // std::cout << e.GetInfo() << std::endl;
+      std::cout << e.GetInfo() << std::endl;
       EXPECT_EQ(TransactionState::ABORTED, txn1->GetState());
       txn_mgr.Abort(txn1);
     }
@@ -263,6 +268,7 @@ TEST(LockManagerTest, DISABLED_BasicDeadlockDetectionTest) {
 
   t0.join();
   t1.join();
+  lock_mgr.Stop();
 
   delete txn0;
   delete txn1;

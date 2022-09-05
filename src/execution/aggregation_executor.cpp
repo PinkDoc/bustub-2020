@@ -27,6 +27,7 @@ AggregationExecutor::AggregationExecutor(ExecutorContext *exec_ctx, const Aggreg
 
 const AbstractExecutor *AggregationExecutor::GetChildExecutor() const { return child_.get(); }
 
+// 从child_exec中获取tuple 然后hash
 void AggregationExecutor::Init() {
   child_->Init();
 
@@ -40,6 +41,7 @@ void AggregationExecutor::Init() {
   aht_iterator_ = aht_.Begin();
 }
 
+// 调用express中的aggreate生成tuple返回
 bool AggregationExecutor::Next(Tuple *tuple, RID *rid) {
   while (aht_iterator_ != aht_.End()){
     if (plan_->GetHaving() == nullptr || plan_->GetHaving()->EvaluateAggregate(aht_iterator_.Key().group_bys_, aht_iterator_.Val().aggregates_).GetAs<bool>()) {

@@ -27,6 +27,8 @@
 namespace bustub {
 
 /**
+ * 两段封锁协议
+ *
  * Transaction states for 2PL:
  *
  *     _________________________
@@ -44,6 +46,10 @@ namespace bustub {
 enum class TransactionState { GROWING, SHRINKING, COMMITTED, ABORTED };
 
 /**
+ * 隔离级别\n
+ * Read Uncommited : 读到了一个abort的事务的数据\n
+ * Read repeatable : 先读到一个数据 后被其他事务修改 再次读取结果就不一样 \n
+ * Read commited ： 只允许读已经提交的的数据\n
  * Transaction isolation level.
  */
 enum class IsolationLevel { READ_UNCOMMITTED, REPEATABLE_READ, READ_COMMITTED };

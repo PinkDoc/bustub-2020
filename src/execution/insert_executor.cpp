@@ -13,6 +13,10 @@
 
 #include "execution/executors/insert_executor.h"
 
+/**
+ * 两种插入方法 1. 从child_exec 中插入 2. 从plan中插入
+ * */
+
 namespace bustub {
 
 InsertExecutor::InsertExecutor(ExecutorContext *exec_ctx, const InsertPlanNode *plan,
@@ -52,13 +56,14 @@ bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
       return Insert(tuple, rid);
     }
     return false;
-  }
+  } else {
+    if (iter_ != plan_->RawValues().end()) {
+      auto t = Tuple{*iter_++, &table_meta_->schema_};
+      return Insert(&t, rid);
+    }
 
-  if (iter_ != plan_->RawValues().end()) {
-    auto t = Tuple{*iter_++ , &table_meta_->schema_};
-    return Insert(&t , rid);
+    return false;
   }
-
   return false;
 
 }

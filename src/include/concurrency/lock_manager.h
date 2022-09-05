@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <set>
 
 #include "common/rid.h"
 #include "concurrency/transaction.h"
@@ -47,6 +48,8 @@ class LockManager {
    public:
     std::list<LockRequest> request_queue_;
     std::condition_variable cv_;  // for notifying blocked transactions on this rid
+    std::size_t shared_count_ = 0;
+    std::size_t exclusive_count_ = 0;
     bool upgrading_ = false;
   };
 
@@ -131,7 +134,17 @@ class LockManager {
   /** Runs cycle detection in the background. */
   void RunCycleDetection();
 
+  void  Stop() {
+    enable_cycle_detection_ = false;
+  }
  private:
+
+  void RemoveCycle(txn_id_t t);
+
+  void CheckAbort(Transaction* txn,const RID& r);
+
+  bool Dfs(txn_id_t id);
+
   std::mutex latch_;
   std::atomic<bool> enable_cycle_detection_;
   std::thread *cycle_detection_thread_;
@@ -140,6 +153,7 @@ class LockManager {
   std::unordered_map<RID, LockRequestQueue> lock_table_;
   /** Waits-for graph representation. */
   std::unordered_map<txn_id_t, std::vector<txn_id_t>> waits_for_;
+  std::set<txn_id_t >visited_;
 };
 
 }  // namespace bustub
