@@ -86,6 +86,7 @@ bool TableHeap::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn) {
   cur_page->WUnlatch();
   buffer_pool_manager_->UnpinPage(cur_page->GetTablePageId(), true);
   // Update the transaction's write set.
+  LOG_DEBUG("InsertSet rid %s", rid->ToString().c_str());
   txn->GetWriteSet()->emplace_back(*rid, WType::INSERT, Tuple{}, this);
   return true;
 }

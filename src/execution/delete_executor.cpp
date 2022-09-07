@@ -36,6 +36,7 @@ bool DeleteExecutor::Delete(Tuple* t, RID* r) {
 
 bool DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
   if (auto ok = child_executor_->Next(tuple, rid); ok) {
+    LockTuple(*rid, true);
     return Delete(tuple, rid);
   }
   return false;

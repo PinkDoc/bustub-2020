@@ -108,6 +108,7 @@ bool LockManager::LockExclusive(Transaction *txn, const RID &rid) {
   auto& [r, q] = *lock_table_.find(rid);
 
   q.request_queue_.emplace_back(txn->GetTransactionId(), LockMode::EXCLUSIVE);
+
   LOG_DEBUG("LockExclusive is abort %d q.exclusive %ld q.shared %ld rid %s",
             txn->GetState() == TransactionState::ABORTED, q.exclusive_count_, q.shared_count_, r.ToString().c_str());
 
@@ -186,7 +187,7 @@ bool LockManager::LockUpgrade(Transaction *txn, const RID &rid) {
 bool LockManager::Unlock(Transaction *txn, const RID &rid) {
   latch_.lock();
   bool is_unlock = false;
-  LOG_DEBUG("Unlock");
+  LOG_DEBUG("Unlock %s", rid.ToString().c_str());
   if (txn->GetState() == TransactionState::GROWING) {
     txn->SetState(TransactionState::SHRINKING);
   }

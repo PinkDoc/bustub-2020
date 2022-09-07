@@ -46,7 +46,17 @@ bool SeqScanExecutor::Next(Tuple *tuple, RID *rid) {
   while (iter_ != table_heap_->End()){
     *tuple = *iter_;
     *rid = tuple->GetRid();
+
+    if (exec_ctx_->GetTransaction()->GetIsolationLevel() != IsolationLevel::READ_UNCOMMITTED) {
+      LockTuple(*rid, false);
+    }
+
     bool ok = table_heap_->GetTuple(*rid, tuple, GetExecutorContext()->GetTransaction());
+
+    if (exec_ctx_->GetTransaction()->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
+      UnLockTuple(*rid);
+    }
+
     iter_++;
     // 满足条件则返回 否则继续查找
     if (ok && (plan_->GetPredicate() == nullptr ||plan_->GetPredicate()->Evaluate(tuple, plan_->OutputSchema()).GetAs<bool>())) {

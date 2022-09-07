@@ -46,6 +46,7 @@ class InsertExecutor : public AbstractExecutor {
 
   bool Insert(Tuple* t, RID* r);
 
+
  private:
   /** The insert plan node to be executed. */
   const InsertPlanNode *plan_;

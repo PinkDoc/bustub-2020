@@ -134,8 +134,8 @@ class LockManager {
   /** Runs cycle detection in the background. */
   void RunCycleDetection();
 
-  void  Stop() {
-    enable_cycle_detection_ = false;
+  auto GetTable() -> std::unordered_map<RID, LockRequestQueue>& {
+    return lock_table_;
   }
  private:
 

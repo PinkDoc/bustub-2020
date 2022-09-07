@@ -183,7 +183,10 @@ class Transaction {
   inline IsolationLevel GetIsolationLevel() const { return isolation_level_; }
 
   /** @return the list of table write records of this transaction */
-  inline std::shared_ptr<std::deque<TableWriteRecord>> GetWriteSet() { return table_write_set_; }
+  inline std::shared_ptr<std::deque<TableWriteRecord>> GetWriteSet() {
+    LOG_DEBUG("GetWriteSet");
+    return table_write_set_;
+  }
 
   /** @return the list of index write records of this transaction */
   inline std::shared_ptr<std::deque<IndexWriteRecord>> GetIndexWriteSet() { return index_write_set_; }
@@ -196,6 +199,7 @@ class Transaction {
    * @param write_record write record to be added
    */
   inline void AppendTableWriteRecord(const TableWriteRecord &write_record) {
+    LOG_DEBUG("RID %s", write_record.rid_.ToString().c_str());
     table_write_set_->push_back(write_record);
   }
 
@@ -204,6 +208,7 @@ class Transaction {
    * @param write_record write record to be added
    */
   inline void AppendTableWriteRecord(const IndexWriteRecord &write_record) {
+    LOG_DEBUG("RID %s", write_record.rid_.ToString().c_str());
     index_write_set_->push_back(write_record);
   }
 

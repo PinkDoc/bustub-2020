@@ -67,6 +67,7 @@ void TransactionManager::Abort(Transaction *txn) {
       table->RollbackDelete(item.rid_, txn);
     } else if (item.wtype_ == WType::INSERT) {
       // Note that this also releases the lock when holding the page latch.
+      //LOG_DEBUG("Abort rid %s", item.rid_.ToString().c_str());
       table->ApplyDelete(item.rid_, txn);
     } else if (item.wtype_ == WType::UPDATE) {
       table->UpdateTuple(item.tuple_, item.rid_, txn);

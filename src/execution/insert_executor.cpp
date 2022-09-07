@@ -40,6 +40,8 @@ void InsertExecutor::Init() {
 bool InsertExecutor::Insert(Tuple* t, RID* r) {
   auto res = table_->InsertTuple(*t, r, exec_ctx_->GetTransaction());
 
+  LockTuple(*r, true);
+
   if (!res) return false;
 
   for (auto& i : catalog_->GetTableIndexes(table_meta_->name_)) {

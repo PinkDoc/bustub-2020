@@ -50,6 +50,35 @@ class AbstractExecutor {
   /** @return the executor context in which this executor runs */
   ExecutorContext *GetExecutorContext() { return exec_ctx_; }
 
+  bool LockTuple(RID& r, bool isExclusive)
+  {
+    auto txn = exec_ctx_->GetTransaction();
+    auto lck_manager = exec_ctx_->GetLockManager();
+    if (isExclusive) {
+
+      if (txn->GetSharedLockSet()->find(r) != txn->GetSharedLockSet()->end()) {
+        // Upgrade
+        return lck_manager->LockUpgrade(txn, r);
+      } else if (txn->GetExclusiveLockSet()->find(r) == txn->GetExclusiveLockSet()->end()) {
+        return lck_manager->LockExclusive(txn, r);
+      }
+    }  else {
+      if (txn->GetSharedLockSet()->find(r) == txn->GetSharedLockSet()->end() &&
+          txn->GetExclusiveLockSet()->find(r) == txn->GetExclusiveLockSet()->end())
+      {
+        return lck_manager->LockShared(txn, r);
+      }
+    }
+    return false;
+  }
+
+  bool UnLockTuple(RID& r)
+  {
+    auto txn = exec_ctx_->GetTransaction();
+    auto lck_manager = exec_ctx_->GetLockManager();
+    return lck_manager->Unlock(txn, r);
+  }
+
  protected:
   ExecutorContext *exec_ctx_;
 };

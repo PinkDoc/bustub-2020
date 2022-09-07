@@ -50,6 +50,7 @@ bool UpdateExecutor::Update(Tuple* t, RID* r) {
 
 bool UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
   if (auto ok = child_executor_->Next(tuple, rid); ok) {
+    LockTuple(*rid, true);
     return Update(tuple, rid);
   }
   return false;
